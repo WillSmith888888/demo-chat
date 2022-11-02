@@ -1,0 +1,12 @@
+<div style="padding:0px 5px" class="" id="from_text_view">
+	<div style="float: left;">
+		<img width="40px" height="40px" class="img-thumbnail icon" alt="..." src="${src}">
+	</div>
+	<div style="float: left;">
+		<div style="margin-left: 5px;margin-top: -5px;font-size: 14px;">
+			<span class="text-primary name" style="margin-right: 5px;">${name}</span>
+			<span class="time text-secondary">${time}</span>
+		</div>
+		<span class="badge bg-primary message"  style="margin-left: 5px;margin-top: 5px;float: left;padding: 8px;font-size: 1em;font-weight: normal;text-align: start;white-space: normal;max-width:${maxWidth}">${content}</span>
+	</div>
+</div>
