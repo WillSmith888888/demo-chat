@@ -22,8 +22,9 @@ java -jar demo-chat-0.0.1-SNAPSHOT.jar
 4.配置nginx，具体可参考deploy目录下的nginx.conf，启动nginx
 
 5.直接访问http://192.168.136.2，后续操作根据下面的图片
-(https://github.com/WillSmith888888/demo-chat/blob/main/deploy/login.png?raw=true)
-(https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat1.png?raw=true)
-(https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat2.png?raw=true)
-(https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat3.png?raw=true)
-(https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat4.png?raw=true)
+<img src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/login.png?raw=true" data-canonical-src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/login.png?raw=true" width="500" />
+<img src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat1.png?raw=true" data-canonical-src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat1.png?raw=true" width="500" />
+<img src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat2.png?raw=true" data-canonical-src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat2.png?raw=true" width="500" />
+<img src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat3.png?raw=true" data-canonical-src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat3.png?raw=true" width="500" />
+<img src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat4.png?raw=true" data-canonical-src="https://github.com/WillSmith888888/demo-chat/blob/main/deploy/chat4.png?raw=true" width="500" />
+
