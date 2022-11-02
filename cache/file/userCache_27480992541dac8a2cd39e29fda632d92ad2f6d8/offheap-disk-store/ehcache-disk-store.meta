@@ -1,4 +1,0 @@
-#Key and value types
-#Tue Nov 01 13:24:36 CST 2022
-keyType=java.lang.String
-valueType=com.chat.demochat.entity.User
