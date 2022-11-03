@@ -30,9 +30,10 @@ public class SessionPool
         return sessionPool.containsKey(account);
     }
 
-    public void remove(String account)
+    public void remove(String account) throws IOException
     {
         sessionPool.remove(account);
+        close(account);
     }
 
     public void sendText(final String account, final String msg) throws IOException

@@ -60,6 +60,7 @@ public class WebSocketEngine
             User user = engine.userService.get(account);
             if (user == null)
             {
+                session.getAsyncRemote().sendText("000001");
                 session.close();
             }
 

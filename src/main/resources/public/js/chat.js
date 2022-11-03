@@ -4,6 +4,10 @@ var unReceiveMsg = [];
 
 var msg_template = {};
 
+var i18n = {
+    '000001': '当前用户已经失效，请重新选择一个有效的账号'
+};
+
 var accountNameMap;
 
 function renderMsgNotReceive(datas) {
@@ -52,6 +56,10 @@ function initWebsocket() {
 
     //接收到消息的回调方法
     websocket.onmessage = function(event) {
+        if (i18n[event.data]) {
+            alert(i18n[event.data]);
+            return;
+        }
         if (event.data.startsWith('SESSION.')) {
             window.localStorage.setItem('sessionId', event.data);
             var arr = event.data.split('<--->');
