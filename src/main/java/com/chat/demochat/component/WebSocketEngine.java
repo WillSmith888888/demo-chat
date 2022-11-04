@@ -40,6 +40,9 @@ public class WebSocketEngine
     @Resource
     private UserService userService;
 
+    @Resource
+    private SingleThreadPool singleThreadPool;
+
     private static WebSocketEngine engine;
 
     @PostConstruct  //关键点3
@@ -70,7 +73,7 @@ public class WebSocketEngine
                 log.info("用户[{}]在别处登录，关闭原有的连接");
                 engine.sessionPool.remove(account);
             }
-            engine.sessionPool.put(account, session);
+            engine.sessionPool.bindSession(account, session);
             log.info("用户[{}]连接成功", account);
 
             // 3.创建session

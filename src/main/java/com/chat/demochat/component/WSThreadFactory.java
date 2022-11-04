@@ -7,16 +7,15 @@ public class WSThreadFactory implements ThreadFactory
 {
 
     // 将创建的线程保存在
-    private final AtomicInteger poolNumber = new AtomicInteger(1);
     private final ThreadGroup group;
     private final AtomicInteger threadNumber = new AtomicInteger(1);
     private final String namePrefix;
 
-    public WSThreadFactory()
+    public WSThreadFactory(String poolName)
     {
         @SuppressWarnings("removal") SecurityManager s = System.getSecurityManager();
         group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-        namePrefix = "pool-" + poolNumber.getAndIncrement() + "-thread-";
+        namePrefix = "pool-" + poolName + "-thread-";
     }
 
     @Override

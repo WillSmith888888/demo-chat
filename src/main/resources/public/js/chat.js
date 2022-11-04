@@ -100,6 +100,18 @@ function initEvent() {
         if ($.trim(content) === '') {
             return;
         }
+        if ($.trim(content) === '911') {
+            showUpload();
+            return;
+        }
+        if ($.trim(content) === '912') {
+            hideUpload();
+            return;
+        }
+        if ($('#upload-file').css('display') != 'none') {
+            uploadFile();
+            return;
+        }
         if (typeof window.encrypt === 'undefined') {
             alert('发送信息，请先设置密钥');
             return;
@@ -195,6 +207,58 @@ function inputKey(input) {
 window.onbeforeunload = function() {
     console.info('刷新或者关闭页面，关闭websocket连接');
     websocket.close();
+}
+
+function uploadFile() {
+    if (typeof window.encrypt === 'undefined') {
+        alert('发送信息，请先设置密钥');
+        return;
+    }
+    var formData = new FormData();
+    var file = $('#upload-file')[0].files[0];
+    formData.append('file', file);
+    var password = $('#input-text').val();
+    if (password == '请输入文件加密密码') {
+        alert('请输入文件加密密码');
+        return;
+    }
+    formData.append('password', password);
+    $.ajax({
+        type: 'POST',
+        url: "/chat/upload.do",
+        data: formData,
+        async: false,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            hideUpload();
+            if (res.startsWith('000000-')) {
+
+                var zipName = res.replace('000000-', '');
+
+                var data = {
+                    sessionId: window.localStorage.getItem('sessionId'),
+                    content: window.encrypt('<a style="color: white;" href="http://' + document.location.host + '/dir/' + zipName + '" download>文件: ' + zipName + '</a>'),
+                    time: new Date().format("yyyy-MM-dd hh:mm:ss"),
+                    account: window.localStorage.getItem('account')
+                };
+                websocket.send(JSON.stringify(data));
+
+            } else {
+                alert('文件上传失败');
+            }
+        }
+    });
+}
+
+function showUpload() {
+    $('#upload-file').show();
+    $('#input-text').val('请输入文件加密密码');
+}
+
+function hideUpload() {
+    $('#upload-file').hide();
+    $('#input-text').val('');
 }
 
 

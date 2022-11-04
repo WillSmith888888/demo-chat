@@ -1,10 +1,14 @@
 package com.chat.demochat.conf;
 
+import com.chat.demochat.component.SingleThreadPool;
 import com.chat.demochat.component.WSThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -15,13 +19,8 @@ public class ThreadPoolConfig
 {
 
     @Bean
-    public ThreadPoolExecutor getThreadPoolExecutor()
+    public SingleThreadPool getSingleThreadPool()
     {
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(Integer.MAX_VALUE), new WSThreadFactory(), (r, executor1) ->
-        {
-            log.info("忽略该任务");
-        });
-
-        return executor;
+        return new SingleThreadPool(5);
     }
 }
