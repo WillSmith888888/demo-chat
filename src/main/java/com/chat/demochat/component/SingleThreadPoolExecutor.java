@@ -9,11 +9,6 @@ public class SingleThreadPoolExecutor extends ThreadPoolExecutor
 
     private AtomicInteger atomicInteger;
 
-    public int addOneBind()
-    {
-        return atomicInteger.getAndIncrement();
-    }
-
     public int getCurrentNum()
     {
         return atomicInteger.get();
@@ -22,6 +17,16 @@ public class SingleThreadPoolExecutor extends ThreadPoolExecutor
     public String getName()
     {
         return name;
+    }
+
+    public int addOneBind()
+    {
+        return atomicInteger.getAndIncrement();
+    }
+
+    public int reduceOneBind()
+    {
+        return atomicInteger.decrementAndGet();
     }
 
     public SingleThreadPoolExecutor(String name, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler)

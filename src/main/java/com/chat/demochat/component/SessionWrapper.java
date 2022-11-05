@@ -33,6 +33,11 @@ public class SessionWrapper
         singleThreadPoolExecutor = executor;
     }
 
+    public int reduceOneBind()
+    {
+        return singleThreadPoolExecutor.reduceOneBind();
+    }
+
     public static final SessionWrapper bindSessionAndThreadPoolExecutor(String account, Session session, SingleThreadPool pool)
     {
         SessionWrapper wrapper = new SessionWrapper();
@@ -40,8 +45,16 @@ public class SessionWrapper
         wrapper.setSession(session);
         SingleThreadPoolExecutor executor = pool.getMinBindSingleThreadPoolExecutor();
         wrapper.setThreadPoolExecutor(executor);
+        executor.addOneBind();
         log.info("用户[{}]-session[{}]绑定了线程池[{}]", account, session.getId(), executor.getName());
         return wrapper;
+    }
+
+    public final void unBind() throws IOException
+    {
+        this.session.close();
+        this.singleThreadPoolExecutor.reduceOneBind();
+        log.info("用户[{}]-session[{}]解绑了线程池[{}]", account, session.getId(), this.singleThreadPoolExecutor.getName());
     }
 
     public void close() throws IOException

@@ -33,7 +33,7 @@ public class SessionPool
     public void remove(String account) throws IOException
     {
         SessionWrapper wrapper = sessionPool.get(account);
-        wrapper.close();
+        wrapper.unBind();
         sessionPool.remove(account);
     }
 
