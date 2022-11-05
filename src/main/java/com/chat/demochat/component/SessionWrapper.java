@@ -68,7 +68,7 @@ public class SessionWrapper
         {
             try
             {
-                log.info("发送信息:{}", msg);
+                log.info("用户[{}]发送信息:[{}]", this.account, msg);
                 session.getBasicRemote().sendText(msg);
             }
             catch (IOException e)
