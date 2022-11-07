@@ -66,6 +66,19 @@ public class WebSocketEngine
                 session.getAsyncRemote().sendText("000001");
                 session.close();
             }
+            List<String> accounts = Arrays.asList(account.concat(",").concat(friends).split(","));
+            Map<String, String> accountNameMap = new HashMap<>();
+            for (String _account : accounts)
+            {
+                User _user = engine.userService.get(_account);
+                if (_user == null)
+                {
+                    session.getAsyncRemote().sendText("000002");
+                    session.close();
+                    return;
+                }
+                accountNameMap.put(_account, _user.getName());
+            }
 
             // 2.建立连接存储session
             if (engine.sessionPool.containsKey(account))
@@ -77,14 +90,7 @@ public class WebSocketEngine
             log.info("用户[{}]连接成功", account);
 
             // 3.创建session
-            List<String> accounts = Arrays.asList(account.concat(",").concat(friends).split(","));
             String sessionId = engine.userService.createSession(accounts);
-            Map<String, String> accountNameMap = new HashMap<>();
-            for (String _account : accounts)
-            {
-                User _user = engine.userService.get(_account);
-                accountNameMap.put(_account, _user.getName());
-            }
             engine.sessionPool.sendText(account, sessionId + "<--->" + JSON.toJSONString(user) + "<--->" + JSON.toJSONString(accountNameMap));
 
             // 4.收集之前的信息

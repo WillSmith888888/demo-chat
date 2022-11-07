@@ -5,7 +5,8 @@ var unReceiveMsg = [];
 var msg_template = {};
 
 var i18n = {
-    '000001': '当前用户已经失效，请重新选择一个有效的账号'
+    '000001': '当前用户已经失效，请重新选择一个有效的账号',
+    "000002": '所选的朋友不存在'
 };
 
 var accountNameMap;

@@ -22,15 +22,13 @@ import java.util.Set;
 public class MessageConsumer
 {
 
-    private static final String TOPIC_PREFIX = "websocket.";
-
     @Resource
     private SessionPool sessionPool;
 
     @Resource
     private Consumer<String, String> consumer;
 
-    @KafkaListener(topicPattern = Constant.SESSION_ID_PREFIX + "*")
+    @KafkaListener(topicPattern = Constant.SESSION_ID_PREFIX + "*", containerFactory = "kafkaListenerFactory")
     public void onConsume(ConsumerRecord<String, String> record, Acknowledgment ack) throws IOException
     {
         String topic = record.topic();
