@@ -101,11 +101,11 @@ function initEvent() {
         if ($.trim(content) === '') {
             return;
         }
-        if ($.trim(content) === '911') {
+        if ($.trim(content) === 'cmd-1') {
             showUpload();
             return;
         }
-        if ($.trim(content) === '912') {
+        if ($.trim(content) === 'cmd-2') {
             hideUpload();
             return;
         }
