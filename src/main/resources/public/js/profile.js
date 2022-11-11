@@ -18,6 +18,14 @@ function save() {
     formData.append('account', account);
     var name = $('#name').val();
     formData.append('name', name);
+    var password = $('#password').val();
+    var password2 = $('#password2').val();
+    if (password == password2) {
+        formData.append('password', password);
+    } else {
+        alert('两次输入的密码不一致');
+        return;
+    }
     $.ajax({
         type: 'POST',
         url: "/chat/createUser.do",

@@ -33,8 +33,11 @@ public class SessionPool
     public void remove(String account) throws IOException
     {
         SessionWrapper wrapper = sessionPool.get(account);
-        wrapper.unBind();
-        sessionPool.remove(account);
+        if (wrapper != null)
+        {
+            wrapper.unBind();
+            sessionPool.remove(account);
+        }
     }
 
     public void sendText(final String account, final String msg) throws IOException

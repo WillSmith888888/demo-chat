@@ -5,7 +5,7 @@ import com.chat.demochat.entity.MsgInfo;
 import com.chat.demochat.entity.User;
 import com.chat.demochat.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +21,7 @@ import java.util.Map;
 
 
 @Slf4j
-@ServerEndpoint("/engine/{account}/{friends}")
+@ServerEndpoint("/engine/{account}/{password}/{friends}")
 @Component
 public class WebSocketEngine
 {
@@ -52,7 +52,7 @@ public class WebSocketEngine
     }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam(value = "account") String account, @PathParam(value = "friends") String friends)
+    public void onOpen(Session session, @PathParam(value = "account") String account, @PathParam(value = "password") String password, @PathParam(value = "friends") String friends)
     {
         try
         {
@@ -65,6 +65,14 @@ public class WebSocketEngine
             {
                 session.getAsyncRemote().sendText("000001");
                 session.close();
+                return;
+            }
+
+            if (!user.getPassword().equals(DigestUtils.md5Hex(password)))
+            {
+                session.getAsyncRemote().sendText("000003");
+                session.close();
+                return;
             }
             List<String> accounts = Arrays.asList(account.concat(",").concat(friends).split(","));
             Map<String, String> accountNameMap = new HashMap<>();

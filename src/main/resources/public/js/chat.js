@@ -6,7 +6,8 @@ var msg_template = {};
 
 var i18n = {
     '000001': '当前用户已经失效，请重新选择一个有效的账号',
-    "000002": '所选的朋友不存在'
+    "000002": '所选的朋友不存在',
+    "000003": '密码不对'
 };
 
 var accountNameMap;
@@ -31,8 +32,8 @@ function renderMsg(data) {
 
 function initWebsocket() {
 
-    if (!window.localStorage.getItem('account') || !window.localStorage.getItem('friends')) {
-        alert('没有输入用户或者朋友名称，请从登录面重新进入');
+    if (!window.localStorage.getItem('account') || !window.localStorage.getItem('friends') || !window.localStorage.getItem('password')) {
+        alert('登录信息缺失，请从登录面重新进入');
         window.location.href = 'login.html';
         return;
     }
@@ -44,6 +45,7 @@ function initWebsocket() {
 
     websocket = new WebSocket('ws://' + document.location.host + '/chat/engine/' +
         window.localStorage.getItem('account') + '/' +
+        window.localStorage.getItem('password') + '/' +
         window.localStorage.getItem('friends'));
     websocket.onerror = function() {
         console.info("error");
@@ -67,7 +69,9 @@ function initWebsocket() {
             window.localStorage.setItem('sessionId', arr[0]);
             var info = JSON.parse(arr[1]);
             for (var key in info) {
-                window.localStorage.setItem(key, info[key]);
+                if (key != 'password') {
+                    window.localStorage.setItem(key, info[key]);
+                }
             }
             accountNameMap = JSON.parse(arr[2]);
             $(".window").html('');
