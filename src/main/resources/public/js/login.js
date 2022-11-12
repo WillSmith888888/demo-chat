@@ -3,7 +3,6 @@
     function initEvent() {
         $('#chat').on('click', function() {
             var account = $('#account').val();
-            var friends = $('#friends').val();
             var password = $('#password').val();
             if (!account) {
                 alert('请输入账号！');
@@ -13,14 +12,26 @@
                 alert('请输入密码！');
                 return;
             }
-            if (!friends) {
-                alert('请输入朋友账号！');
-                return;
+            login(account, password);
+        });
+    }
+
+
+    function login(account, password) {
+        $.ajax({
+            url: '/chat/login.do',
+            type: 'POST',
+            data: { account: account, password: password },
+            success: function(resp) {
+                console.info('登录返回结果：' + resp);
+                resp = JSON.parse(resp);
+                if (resp.code == '000000') {
+                    window.localStorage.setItem('token', token);
+                    window.location.href = 'chat.html';
+                } else {
+                    alert(resp.msg);
+                }
             }
-            window.localStorage.setItem('account', account);
-            window.localStorage.setItem('password', password);
-            window.localStorage.setItem('friends', friends);
-            window.location.href = 'chat.html';
         });
     }
 

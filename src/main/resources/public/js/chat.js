@@ -7,7 +7,8 @@ var msg_template = {};
 var i18n = {
     '000001': '当前用户已经失效，请重新选择一个有效的账号',
     "000002": '所选的朋友不存在',
-    "000003": '密码不对'
+    "000003": '密码不对',
+    "000004": '登录信息失效'
 };
 
 var accountNameMap;
@@ -32,7 +33,7 @@ function renderMsg(data) {
 
 function initWebsocket() {
 
-    if (!window.localStorage.getItem('account') || !window.localStorage.getItem('friends') || !window.localStorage.getItem('password')) {
+    if (!window.localStorage.getItem('token')) {
         alert('登录信息缺失，请从登录面重新进入');
         window.location.href = 'login.html';
         return;
@@ -43,10 +44,7 @@ function initWebsocket() {
         return;
     }
 
-    websocket = new WebSocket('ws://' + document.location.host + '/chat/engine/' +
-        window.localStorage.getItem('account') + '/' +
-        window.localStorage.getItem('password') + '/' +
-        window.localStorage.getItem('friends'));
+    websocket = new WebSocket('ws://' + document.location.host + '/chat/engine/' + window.localStorage.getItem('token'));
     websocket.onerror = function() {
         console.info("error");
     };

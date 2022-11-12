@@ -1,11 +1,14 @@
 package com.chat.demochat.component;
 
 import com.alibaba.fastjson.JSON;
+import com.chat.demochat.entity.LoginInfo;
 import com.chat.demochat.entity.MsgInfo;
+import com.chat.demochat.entity.MsgWrapper;
 import com.chat.demochat.entity.User;
 import com.chat.demochat.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -14,19 +17,13 @@ import javax.annotation.Resource;
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 @Slf4j
-@ServerEndpoint("/engine/{account}/{password}/{friends}")
+@ServerEndpoint("/engine/{token}")
 @Component
 public class WebSocketEngine
 {
-
-    private static final String TOPIC_PREFIX = "websocket.";
 
     @Resource
     private MessageConsumer consumer;
@@ -43,6 +40,9 @@ public class WebSocketEngine
     @Resource
     private SingleThreadPool singleThreadPool;
 
+    @Resource
+    private CacheManager cacheManager;
+
     private static WebSocketEngine engine;
 
     @PostConstruct  //关键点3
@@ -52,43 +52,35 @@ public class WebSocketEngine
     }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam(value = "account") String account, @PathParam(value = "password") String password, @PathParam(value = "friends") String friends)
+    public void onOpen(Session session, @PathParam(value = "token") String token)
     {
         try
         {
+            // 1.校验登录信息
+            log.info("token:[{}]", token);
+            Cache loginInfoCache = engine.cacheManager.getCache("loginInfoCache");
+            LoginInfo loginInfo = loginInfoCache.get(token, LoginInfo.class);
+            if (loginInfo == null)
+            {
+                session.getAsyncRemote().sendText("000004");
+                session.close();
+                return;
+            }
+            session.getAsyncRemote().sendText(JSON.toJSONString(MsgWrapper.wrap(1, loginInfo.getUser())));
 
-            log.info("用户[{}]请求连接", account);
-
-            // 1. TODO 校验用户
+            // 2.校验用户
+            log.info("用户[{}]请求连接", loginInfo.getUser().getAccount());
+            String account = loginInfo.getUser().getAccount();
             User user = engine.userService.get(account);
             if (user == null)
             {
+                log.info("账号[{}]已经失效", account);
                 session.getAsyncRemote().sendText("000001");
                 session.close();
                 return;
             }
 
-            if (!user.getPassword().equals(DigestUtils.md5Hex(password)))
-            {
-                session.getAsyncRemote().sendText("000003");
-                session.close();
-                return;
-            }
-            List<String> accounts = Arrays.asList(account.concat(",").concat(friends).split(","));
-            Map<String, String> accountNameMap = new HashMap<>();
-            for (String _account : accounts)
-            {
-                User _user = engine.userService.get(_account);
-                if (_user == null)
-                {
-                    session.getAsyncRemote().sendText("000002");
-                    session.close();
-                    return;
-                }
-                accountNameMap.put(_account, _user.getName());
-            }
-
-            // 2.建立连接存储session
+            // 3.存储websocket session
             if (engine.sessionPool.containsKey(account))
             {
                 log.info("用户[{}]在别处登录，关闭原有的连接");
@@ -97,12 +89,8 @@ public class WebSocketEngine
             engine.sessionPool.bindSession(account, session);
             log.info("用户[{}]连接成功", account);
 
-            // 3.创建session
-            String sessionId = engine.userService.createSession(accounts);
-            engine.sessionPool.sendText(account, sessionId + "<--->" + JSON.toJSONString(user) + "<--->" + JSON.toJSONString(accountNameMap));
-
             // 4.收集之前的信息
-            engine.consumer.consumeBefore(sessionId);
+            engine.consumer.consumeBefore(account);
         }
         catch (Exception e)
         {
@@ -111,12 +99,14 @@ public class WebSocketEngine
     }
 
     @OnClose
-    public void onClose(@PathParam(value = "account") String account)
+    public void onClose(@PathParam(value = "token") String token)
     {
         try
         {
-            engine.sessionPool.remove(account);
-            log.info("用户[{}]断开连接", account);
+            Cache loginInfoCache = cacheManager.getCache("loginInfoCache");
+            LoginInfo loginInfo = loginInfoCache.get(token, LoginInfo.class);
+            engine.sessionPool.remove(loginInfo.getUser().getAccount());
+            log.info("用户[{}]断开连接", loginInfo.getUser().getAccount());
         }
         catch (Exception e)
         {

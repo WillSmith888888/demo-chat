@@ -5,14 +5,12 @@ import com.chat.demochat.dao.UserRepository;
 import com.chat.demochat.entity.LoginInfo;
 import com.chat.demochat.entity.User;
 import com.chat.demochat.exception.LoginException;
-import com.chat.demochat.exception.Resp;
 import com.chat.demochat.service.UserService;
 import com.chat.demochat.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.PartitionInfo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,10 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 
 @Transactional
 @Slf4j
@@ -39,7 +34,7 @@ public class UserServiceImpl implements UserService
     @Resource
     private KafkaTemplate<String, String> kafkaTemplate;
 
-    @Autowired
+    @Resource
     private CacheManager cacheManager;
 
     @Resource
@@ -54,6 +49,18 @@ public class UserServiceImpl implements UserService
 //        userCache.put(user.getAccount(), user);
         userRepository.save(user);
 
+    }
+
+    @Override
+    public User getByToken(String token) throws LoginException
+    {
+        Cache loginInfoCache = cacheManager.getCache("loginInfoCache");
+        LoginInfo loginInfo = loginInfoCache.get(token, LoginInfo.class);
+        if (loginInfo == null)
+        {
+            throw new LoginException("000003", "用户登录信息失效");
+        }
+        return get(loginInfo.getUser().getAccount());
     }
 
 
@@ -73,7 +80,7 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public Resp login(String account, String password) throws LoginException
+    public String login(String account, String password) throws LoginException
     {
         User user = userRepository.getReferenceById(account);
         if (user == null)
@@ -93,7 +100,36 @@ public class UserServiceImpl implements UserService
         loginInfo.setToken(token);
         loginInfoCache.put(token, loginInfo);
         log.info("用户登录成功:{}", token);
-        return Resp.getInstance("000000", token);
+        return token;
+    }
+
+    @Override
+    public String getSessionId(String accounts) throws LoginException
+    {
+        List<String> accountList = Arrays.asList(accounts.split(","));
+        String token = accountList.get(0);
+        Cache loginInfoCache = cacheManager.getCache("loginInfoCache");
+        LoginInfo loginInfo = loginInfoCache.get(token, LoginInfo.class);
+        if (loginInfo == null)
+        {
+            throw new LoginException("000004", "登录信息失效");
+        }
+        accountList.set(0, loginInfo.getUser().getAccount());
+        return Utils.getSessionId(accountList);
+    }
+
+    @Override
+    public List<User> getFriends(String token) throws LoginException
+    {
+        Cache loginInfoCache = cacheManager.getCache("loginInfoCache");
+        LoginInfo loginInfo = loginInfoCache.get(token, LoginInfo.class);
+        if (loginInfo == null)
+        {
+            throw new LoginException("000004", "用户登录信息失效");
+        }
+        String account = loginInfo.getUser().getAccount();
+
+        return null;
     }
 
 
@@ -119,6 +155,12 @@ public class UserServiceImpl implements UserService
         return sessionId;
     }
 
+
+    @Override
+    public void addFriend(String account, String friend)
+    {
+
+    }
 
     public static void main(String[] args)
     {

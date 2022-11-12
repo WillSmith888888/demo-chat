@@ -13,10 +13,18 @@ public interface UserService
 
     void createUser(@RequestBody User user);
 
+    User getByToken(String token) throws LoginException;
+
     User get(String account);
 
     void delByAccount(String account);
 
-    Resp login(String account, String password) throws LoginException;
+    String login(String account, String password) throws LoginException;
+
+    String getSessionId(String accounts) throws LoginException;
+
+    List<User> getFriends(String token) throws LoginException;
+
+    void addFriend(String account, String friend);
 
 }

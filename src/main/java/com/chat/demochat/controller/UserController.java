@@ -4,21 +4,27 @@ import com.chat.demochat.entity.User;
 import com.chat.demochat.exception.LoginException;
 import com.chat.demochat.exception.Resp;
 import com.chat.demochat.service.UserService;
+import com.chat.demochat.util.Utils;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @RestController
+@Api(value = "用户管理")
 public class UserController
 {
 
@@ -28,13 +34,26 @@ public class UserController
     @Resource
     private UserService userService;
 
-    @PostMapping(value = "/createUser.do")
-    public Object createUser(@RequestParam("file") MultipartFile file, @RequestParam("account") String account, @RequestParam("name") String name, @RequestParam("password") String password) throws IOException
+    @ApiOperation(value = "创建用户接口")
+    @PostMapping(value = "/createUser.do", headers = "content-type=multipart/form-data")
+    public Object createUser(@RequestParam(value = "file") @RequestPart @ApiParam("file") MultipartFile file,
+                             @RequestParam("account") String account,
+                             @RequestParam("name") String name,
+                             @RequestParam("password") String password,
+                             @RequestParam("friends") String friends) throws IOException
     {
         User user = new User();
         user.setAccount(account);
         user.setName(name);
         user.setPassword(password);
+        List<User> list = new ArrayList<>();
+        for (String friend : friends.split(","))
+        {
+            User _user = new User();
+            _user.setAccount(friend);
+            list.add(_user);
+        }
+        user.setFriends(list);
         userService.createUser(user);
         int i = file.getOriginalFilename().lastIndexOf(".");
         String fileType = file.getOriginalFilename().substring(i);
@@ -53,7 +72,6 @@ public class UserController
         return "000000";
     }
 
-
     @GetMapping(value = "/query.do")
     public Object query(String account)
     {
@@ -71,18 +89,41 @@ public class UserController
     @PostMapping(value = "/login.do")
     public Object login(String account, String password)
     {
-        Resp resp;
+        String token;
         try
         {
-            resp = userService.login(account, password);
+            token = userService.login(account, password);
         }
         catch (LoginException e)
         {
             e.printStackTrace();
             log.error("用户登录出现异常：", e);
-            resp = Resp.getInstance(e.getCode(), e.getMsg());
+            return Resp.getInstance(e.getCode(), e.getMsg());
         }
-        return resp;
+        return Resp.getInstance("000000", null, token);
     }
 
+    @PostMapping(value = "/getSessionId.do")
+    public Object getSessionId(String accounts)
+    {
+        try
+        {
+            String sessionId = userService.getSessionId(accounts);
+            log.info("获取到sessionId:[{}]", sessionId);
+            return Resp.getInstance("000000", null, sessionId);
+        }
+        catch (LoginException e)
+        {
+            e.printStackTrace();
+            log.error("获取会话ID出现异常:", e);
+            return Resp.getInstance(e.getCode(), e.getMsg());
+        }
+    }
+
+    /*@PostMapping(value = "/addFriend.do")
+    public Object addFriend(String account, String friend)
+    {
+
+    }
+*/
 }

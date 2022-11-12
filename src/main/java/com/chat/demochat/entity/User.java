@@ -3,10 +3,9 @@ package com.chat.demochat.entity;
 import lombok.Data;
 import org.hibernate.annotations.Proxy;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @Table(name = "t_user")
@@ -20,5 +19,11 @@ public class User implements Serializable
     private String name;
 
     private String password;
+
+    @ManyToMany
+    @JoinTable(name = "t_friend",
+            joinColumns = {@JoinColumn(name = "account", referencedColumnName = "account")},
+            inverseJoinColumns = {@JoinColumn(name = "friend", referencedColumnName = "account")})
+    private List<User> friends;
 
 }

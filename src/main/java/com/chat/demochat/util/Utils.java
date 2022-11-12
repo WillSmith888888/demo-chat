@@ -1,16 +1,10 @@
 package com.chat.demochat.util;
 
-import com.alibaba.fastjson.JSON;
-import com.chat.demochat.component.SingleThreadPoolExecutor;
-import com.chat.demochat.component.WSThreadFactory;
 import com.chat.demochat.cons.Constant;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.springframework.cache.CacheManager;
 
-import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.TreeSet;
 
 @Slf4j
 public class Utils
