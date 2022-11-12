@@ -7,6 +7,7 @@ import com.chat.demochat.entity.MsgWrapper;
 import com.chat.demochat.entity.User;
 import com.chat.demochat.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -43,6 +44,9 @@ public class WebSocketEngine
     @Resource
     private CacheManager cacheManager;
 
+    @Resource(name = "loginInfoCache")
+    private com.github.benmanes.caffeine.cache.Cache<String, LoginInfo> cache;
+
     private static WebSocketEngine engine;
 
     @PostConstruct  //关键点3
@@ -58,15 +62,14 @@ public class WebSocketEngine
         {
             // 1.校验登录信息
             log.info("token:[{}]", token);
-            Cache loginInfoCache = engine.cacheManager.getCache("loginInfoCache");
-            LoginInfo loginInfo = loginInfoCache.get(token, LoginInfo.class);
+            LoginInfo loginInfo =  engine.cache.asMap().get(token);
             if (loginInfo == null)
             {
-                session.getAsyncRemote().sendText("000004");
+                session.getAsyncRemote().sendText(MsgWrapper.wrap(1, "登录信息失效").toString());
                 session.close();
                 return;
             }
-            session.getAsyncRemote().sendText(JSON.toJSONString(MsgWrapper.wrap(1, loginInfo.getUser())));
+            session.getAsyncRemote().sendText(MsgWrapper.wrap(2, loginInfo.getUser()).toString());
 
             // 2.校验用户
             log.info("用户[{}]请求连接", loginInfo.getUser().getAccount());
@@ -75,7 +78,7 @@ public class WebSocketEngine
             if (user == null)
             {
                 log.info("账号[{}]已经失效", account);
-                session.getAsyncRemote().sendText("000001");
+                session.getAsyncRemote().sendText(MsgWrapper.wrap(1, "当前用户已经失效").toString());
                 session.close();
                 return;
             }
@@ -103,8 +106,7 @@ public class WebSocketEngine
     {
         try
         {
-            Cache loginInfoCache = cacheManager.getCache("loginInfoCache");
-            LoginInfo loginInfo = loginInfoCache.get(token, LoginInfo.class);
+            LoginInfo loginInfo = cache.asMap().get(token);
             engine.sessionPool.remove(loginInfo.getUser().getAccount());
             log.info("用户[{}]断开连接", loginInfo.getUser().getAccount());
         }

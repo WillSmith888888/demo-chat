@@ -22,8 +22,6 @@ import java.util.*;
 @Component
 public class MessageConsumer
 {
-
-
     @Value("${kafka.seek.time}")
     private int kafkaSeekTime;
 
