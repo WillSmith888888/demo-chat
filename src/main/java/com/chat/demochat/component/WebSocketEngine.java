@@ -7,8 +7,6 @@ import com.chat.demochat.entity.MsgWrapper;
 import com.chat.demochat.entity.User;
 import com.chat.demochat.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;

@@ -5,6 +5,7 @@ import com.chat.demochat.exception.LoginException;
 import com.chat.demochat.exception.Resp;
 import com.chat.demochat.service.UserService;
 import com.chat.demochat.util.Utils;
+import io.netty.util.internal.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -40,18 +41,21 @@ public class UserController
                              @RequestParam("account") String account,
                              @RequestParam("name") String name,
                              @RequestParam("password") String password,
-                             @RequestParam("friends") String friends) throws IOException
+                             String friends) throws IOException
     {
         User user = new User();
         user.setAccount(account);
         user.setName(name);
         user.setPassword(password);
         List<User> list = new ArrayList<>();
-        for (String friend : friends.split(","))
+        if (!StringUtil.isNullOrEmpty(friends))
         {
-            User _user = new User();
-            _user.setAccount(friend);
-            list.add(_user);
+            for (String friend : friends.split(","))
+            {
+                User _user = new User();
+                _user.setAccount(friend);
+                list.add(_user);
+            }
         }
         user.setFriends(list);
         userService.createUser(user);

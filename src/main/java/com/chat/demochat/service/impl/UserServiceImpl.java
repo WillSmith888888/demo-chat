@@ -47,11 +47,17 @@ public class UserServiceImpl implements UserService
     @Override
     public void createUser(User user)
     {
-//        Cache userCache = cacheManager.getCache("userCache");
         user.setPassword(DigestUtils.md5Hex(user.getPassword()));
-//        userCache.put(user.getAccount(), user);
-        userRepository.save(user);
-
+        User _user = userRepository.getReferenceById(user.getAccount());
+        if (_user == null)
+        {
+            userRepository.save(user);
+        }
+        else
+        {
+            _user.setFriends(user.getFriends());
+            userRepository.save(_user);
+        }
     }
 
     @Override
