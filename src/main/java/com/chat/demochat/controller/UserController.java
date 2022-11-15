@@ -107,6 +107,22 @@ public class UserController
         return Resp.getInstance("000000", null, token);
     }
 
+    @PostMapping(value = "/logout.do")
+    public Object logout(String token)
+    {
+        try
+        {
+            userService.logout(token);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            log.error("退出登录失败：", e);
+            return Resp.getInstance("000005", "退出登录失败");
+        }
+        return Resp.getInstance("000000", "退出登录成功");
+    }
+
     @PostMapping(value = "/getSessionId.do")
     public Object getSessionId(String accounts)
     {

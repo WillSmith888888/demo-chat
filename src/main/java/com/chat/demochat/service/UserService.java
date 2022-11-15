@@ -5,6 +5,7 @@ import com.chat.demochat.exception.LoginException;
 import com.chat.demochat.exception.Resp;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface UserService
@@ -20,6 +21,8 @@ public interface UserService
     void delByAccount(String account);
 
     String login(String account, String password) throws LoginException;
+
+    void logout(String token) throws LoginException, IOException;
 
     String getSessionId(String accounts) throws LoginException;
 

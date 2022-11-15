@@ -1,6 +1,7 @@
 package com.chat.demochat.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.chat.demochat.component.SessionPool;
 import com.chat.demochat.cons.Constant;
 import com.chat.demochat.dao.UserRepository;
 import com.chat.demochat.entity.LoginInfo;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.util.*;
 
 @Transactional
@@ -39,6 +41,9 @@ public class UserServiceImpl implements UserService
 
     @Resource
     private UserRepository userRepository;
+
+    @Resource
+    private SessionPool sessionPool;
 
     @Resource(name = "loginInfoCache")
     private com.github.benmanes.caffeine.cache.Cache<String, LoginInfo> cache;
@@ -78,6 +83,7 @@ public class UserServiceImpl implements UserService
 //        Cache userCache = cacheManager.getCache("userCache");
 //        User user = userCache.get(account, User.class);
         User user = userRepository.getReferenceById(account);
+        log.info(JSON.toJSONString(user));
         return user;
     }
 
@@ -110,6 +116,15 @@ public class UserServiceImpl implements UserService
         log.info("用户登录成功:{}", token);
         return token;
     }
+
+    @Override
+    public void logout(String token) throws LoginException, IOException
+    {
+        LoginInfo loginInfo = cache.asMap().get(token);
+        sessionPool.remove(loginInfo.getUser().getAccount());
+        cache.asMap().remove(token);
+    }
+
 
     @Override
     public String getSessionId(String accounts) throws LoginException
