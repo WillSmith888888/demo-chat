@@ -1,0 +1,78 @@
+<div class="d-flex flex-column h-100">
+    <div class="hide-scrollbar">
+        <!-- Sidebar Header Start -->
+        <div class="sidebar-header sticky-top p-2 mb-3">
+            <h5 class="font-weight-semibold">Profile</h5>
+            <p class="text-muted mb-0">Personal Information & Settings</p>
+        </div>
+        <!-- Sidebar Header end -->
+
+        <!-- Sidebar Content Start -->
+        <div class="container-xl">
+            <div class="row">
+                <div class="col">
+                    <div class="card card-body card-bg-5">
+
+                        <!-- Card Details Start -->
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="avatar avatar-lg mb-3">
+                                <img class="avatar-img" src="assets/media/avatar/${account}.png" alt="">
+                            </div>
+
+                            <div class="d-flex flex-column align-items-center">
+                                <h5 class="user-name">${name}</h5>
+                            </div>
+
+                            <div class="d-flex">
+                                <button class="logout btn btn-outline-default mx-1" type="button">
+                                    <!-- Default :: Inline SVG -->
+                                    <svg class="hw-18 d-none d-sm-inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                    </svg>
+                                        
+                                    <!-- Alternate :: External File link -->
+                                    <!-- <img class="injectable hw-18 d-sm-inline-block" src="assets/media/heroicons/outline/logout.svg" alt=""> -->
+                                    <span>Logout</span> 
+                                </button>
+                                <button class="btn btn-outline-default mx-1 d-xl-none" data-profile-edit="" type="button">
+                                    <!-- Default :: Inline SVG -->
+                                    <svg class="hw-18 d-none d-sm-inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                        
+                                    <!-- Alternate :: External File link -->
+                                    <!-- <img class="injectable hw-18 d-sm-inline-block" src="assets/media/heroicons/outline/cog.svg" alt=""> -->
+                                    <span>Settings</span> 
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Card Details End -->
+
+                        <!-- Card Options Start -->
+                        <div class="card-options">
+                            <div class="dropdown">
+                                <button class="btn btn-secondary btn-icon btn-minimal btn-sm text-muted text-muted" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <!-- Default :: Inline SVG -->
+                                    <svg class="hw-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                                    </svg>
+                                        
+                                    <!-- Alternate :: External File link -->
+                                    <!-- <img class="injectable hw-20" src="assets/media/heroicons/outline/dots-vertical.svg" alt=""> -->
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="#">Change Profile Picture</a>
+                                    <a class="dropdown-item" href="#">Change Number</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card Options End -->
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Sidebar Content End -->
+    </div>
+</div>

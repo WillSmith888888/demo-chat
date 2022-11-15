@@ -1,42 +1,71 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>登录</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/app.css" rel="stylesheet">
-    <script type="text/javascript" src="/js/jquery-3.3.1.min.js"></script>
+    <!-- Viewport-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
+    <!-- SEO Meta Tags-->
+    <meta name="keywords" content="quicky, chat, messenger, conversation, social, communication" />
+    <meta name="description" content="Quicky is a Bootstrap based modern and fully responsive Messaging template to help build Messaging or Chat application fast and easy." />
+    <meta name="subject" content="communication">
+    <meta name="copyright" content="frontendmatters">
+    <meta name="revised" content="Sunday, July 18th, 2010, 5:15 pm" />
+    <title>Quicky - HTML Chat Template</title>
+    <!-- Favicon and Touch Icons-->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="shortcut icon" href="favicon.ico" />
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+
+    <link rel="stylesheet" href="assets/webfonts/inter/inter.css">
+    <link rel="stylesheet" href="assets/css/app.min.css">
 </head>
 
-<body>
-    <div class="card bg-dark" style="margin: 24px;padding: 24px;">
+<body class="authentication-page">
 
-        <form id="logoForm">
+    <!-- Main Layout Start -->
+    <div class="main-layout card-bg-1">
+        <div class="container d-flex flex-column">
+            <div class="row no-gutters text-center align-items-center justify-content-center min-vh-100">
+                <div class="col-12 col-md-6 col-lg-5 col-xl-4">
+                    <h1 class="font-weight-bold">Sign in</h1>
+                    <p class="text-dark mb-3">We are Different, We Make You Different.</p>
+                    <div class="mb-3">
+                        <div class="form-group">
+                            <label for="account" class="sr-only">Email Address</label>
+                            <input type="account" class="form-control form-control-md" id="account" placeholder="Enter your account">
+                        </div>
+                        <div class="form-group">
+                            <label for="password" class="sr-only">Password</label>
+                            <input type="password" class="form-control form-control-md" id="password" placeholder="Enter your password">
+                        </div>
+                        <!-- <div class="form-group d-flex justify-content-between">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" checked="" id="checkbox-remember">
+                                <label class="custom-control-label text-muted font-size-sm" for="checkbox-remember">Remember me</label>
+                            </div>
+                            <a class="font-size-sm" href="./reset-password.html">Reset password</a>
+                        </div> -->
+                        <button id="login" class="btn btn-primary btn-lg btn-block text-uppercase font-weight-semibold" type="submit">Sign in</button>
+                    </div>
 
-            <div class="mb-3">
-                <label for="account" class="form-label text-light">账号</label>
-                <input type="text" class="form-control" name="account" id="account" aria-describedby="emailHelp">
+                    <!-- <p>Don't have an account? <a class="font-weight-semibold" href="./signup.html">Sign up</a>.</p> -->
+                </div>
             </div>
-
-            <div class="mb-3">
-                <label for="friends" class="form-label text-light">密码</label>
-                <input type="password" class="form-control" name="password" id="password" aria-describedby="emailHelp">
-            </div>
-
-            <div class="mb-3">
-                <label for="friends" class="form-label text-light">朋友</label>
-                <input type="text" class="form-control" name="friends" id="friends" aria-describedby="emailHelp">
-            </div>
-
-            <div class="mb-3 text-center">
-                <button id="chat" type="button" class="btn btn-primary btn-lg">开始聊天</button>
-            </div>
-        </form>
+        </div>
     </div>
-</body>
+    <!-- Main Layout End -->
 
-<script type="text/javascript" src="/js/login.js"></script>
+
+    <!-- Javascript Files -->
+    <script src="assets/vendors/jquery/jquery-3.5.0.min.js"></script>
+    <script src="assets/vendors/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendors/svg-inject/svg-inject.min.js"></script>
+    <script src="assets/js/login.js"></script>
+
+</body>
 
 </html>
