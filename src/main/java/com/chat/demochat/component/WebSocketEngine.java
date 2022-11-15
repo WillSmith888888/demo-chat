@@ -60,7 +60,7 @@ public class WebSocketEngine
         {
             // 1.校验登录信息
             log.info("token:[{}]", token);
-            LoginInfo loginInfo =  engine.cache.asMap().get(token);
+            LoginInfo loginInfo = engine.cache.asMap().get(token);
             if (loginInfo == null)
             {
                 session.getAsyncRemote().sendText(MsgWrapper.wrap(1, "登录信息失效").toString());
@@ -116,11 +116,18 @@ public class WebSocketEngine
 
 
     @OnMessage
-    public void onMessage(String msg)
+    public void onMessage(Session session, String msg)
     {
         log.info("【websocket消息】收到客户端消息:" + msg);
-        MsgInfo msgInfo = JSON.parseObject(msg, MsgInfo.class);
-        engine.kafkaTemplate.send(msgInfo.getSessionId(), msg);
+        if ("ping".equals(msg))
+        {
+            session.getAsyncRemote().sendText("pong");
+        }
+        else
+        {
+            MsgInfo msgInfo = JSON.parseObject(msg, MsgInfo.class);
+            engine.kafkaTemplate.send(msgInfo.getSessionId(), msg);
+        }
     }
 
     @OnError
