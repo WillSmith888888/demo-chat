@@ -87,7 +87,15 @@ function initEvent() {
 }
 
 function send() {
-    var sessionId = $('#sendMsg').attr('data-sessionid');
+
+    // 判断是不是上传文件
+    if ($('.file-input')[0].files.length) {
+        uploadFile();
+        return;
+    }
+
+
+    var sessionId = $('#sendMsg').closest('form').attr('data-sessionid');
     var content = $('#msg').val();
     if (content) {
         var time = new Date().format('yyyy-MM-dd hh:mm:ss')
@@ -103,7 +111,7 @@ function send() {
         websocket.send(JSON.stringify({
             sessionId: sessionId,
             account: account,
-            content: content,
+            content: cryptTool.encrypt(sessionId, content),
             time: time
         }));
         $('#msg').val('');
@@ -237,6 +245,9 @@ function renderSession(msg) {
     }
 
     for (var key in msg) {
+        if (key == 'content') {
+            msg[key] = cryptTool.decrypt(sessionId, msg[key]);
+        }
         message = message.replaceAll('${' + key + '}', msg[key]);
     }
 
@@ -244,9 +255,7 @@ function renderSession(msg) {
         createSession(sessionId);
     }
     $('#messageBody [data-sessionid="' + sessionId + '"]').append(message);
-    var chatWindow = $('#chatContactTab [data-sessionid="' + sessionId + '"]');
-    var scrollHeight = chatWindow.prop("scrollHeight");
-    chatWindow.scrollTop(scrollHeight, 100);
+    $('#messageBody').scrollTop($('#messageBody').prop("scrollHeight"));
 }
 
 function showFriendPage(account) {
@@ -287,7 +296,7 @@ function showSession(sessionId) {
             }
             $('.chat-header').html(chatHeader);
         }
-        $('#sendMsg').attr('data-sessionid', sessionId);
+        $('#sendMsg').closest('form').attr('data-sessionid', sessionId);
 
     });
 }
