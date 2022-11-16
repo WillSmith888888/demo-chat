@@ -27,6 +27,7 @@ public class DeleteJob
     @Scheduled(cron = "0 0/5 * * * ?")
     private void delete() throws IOException
     {
+        log.info("定时任务清理过期文件");
         File file = new File(uploadPath);
         File[] files = file.listFiles();
         for (File _file : files)

@@ -7,6 +7,7 @@ import com.chat.demochat.entity.MsgWrapper;
 import com.chat.demochat.entity.User;
 import com.chat.demochat.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -104,7 +105,7 @@ public class WebSocketEngine
     {
         try
         {
-            LoginInfo loginInfo = cache.asMap().get(token);
+            LoginInfo loginInfo = engine.cache.asMap().get(token);
             engine.sessionPool.remove(loginInfo.getUser().getAccount());
             log.info("用户[{}]断开连接", loginInfo.getUser().getAccount());
         }

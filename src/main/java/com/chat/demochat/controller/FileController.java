@@ -1,5 +1,6 @@
 package com.chat.demochat.controller;
 
+import com.chat.demochat.exception.Resp;
 import com.chat.demochat.util.ZipUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,9 +26,9 @@ public class FileController
         InputStream is = file.getInputStream();
         String originalFilename = file.getOriginalFilename();
         String zipName = originalFilename.substring(0, originalFilename.lastIndexOf(".")) + ".zip";
+        log.info("源文件：{}, 生成文件全路径：{}", originalFilename, uploadPath + zipName);
         ZipUtil.compressedFileWithPassword(is, file.getOriginalFilename(), uploadPath + zipName, password);
-
-        return "000000-" + zipName;
+        return Resp.getInstance("000000", null, zipName);
     }
 
 }

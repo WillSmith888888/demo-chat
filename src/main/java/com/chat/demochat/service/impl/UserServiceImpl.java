@@ -52,17 +52,9 @@ public class UserServiceImpl implements UserService
     @Override
     public void createUser(User user)
     {
+        // 1.先保存用户
         user.setPassword(DigestUtils.md5Hex(user.getPassword()));
-        User _user = userRepository.getReferenceById(user.getAccount());
-        if (_user == null)
-        {
-            userRepository.save(user);
-        }
-        else
-        {
-            _user.setFriends(user.getFriends());
-            userRepository.save(_user);
-        }
+        userRepository.save(user);
     }
 
     @Override
