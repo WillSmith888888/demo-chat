@@ -1,26 +1,25 @@
 package com.chat.demochat.controller;
 
+import com.chat.demochat.entity.LoginInfo;
+import com.chat.demochat.entity.Notify;
 import com.chat.demochat.entity.User;
+import com.chat.demochat.exception.AlreadyFriendException;
 import com.chat.demochat.exception.LoginException;
+import com.chat.demochat.exception.NotExistAccountException;
 import com.chat.demochat.exception.Resp;
 import com.chat.demochat.service.UserService;
-import com.chat.demochat.util.Utils;
 import io.netty.util.internal.StringUtil;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -35,13 +34,12 @@ public class UserController
     @Resource
     private UserService userService;
 
+    @Resource(name = "loginInfoCache")
+    private com.github.benmanes.caffeine.cache.Cache<String, LoginInfo> cache;
+
     @ApiOperation(value = "创建用户接口")
     @PostMapping(value = "/createUser.do", headers = "content-type=multipart/form-data")
-    public Object createUser(@RequestParam(value = "file") @RequestPart @ApiParam("file") MultipartFile file,
-                             @RequestParam("account") String account,
-                             @RequestParam("name") String name,
-                             @RequestParam("password") String password,
-                             String friends) throws IOException
+    public Object createUser(@RequestParam(value = "file") @RequestPart @ApiParam("file") MultipartFile file, @RequestParam("account") String account, @RequestParam("name") String name, @RequestParam("password") String password, String friends) throws IOException
     {
         User user = new User();
         user.setAccount(account);
@@ -140,10 +138,39 @@ public class UserController
         }
     }
 
-    /*@PostMapping(value = "/addFriend.do")
-    public Object addFriend(String account, String friend)
+    @PostMapping(value = "/addFriend.do")
+    public Object addFriend(String token, String account)
     {
-
+        LoginInfo loginInfo = cache.asMap().get(token);
+        if (loginInfo == null)
+        {
+            return Resp.getInstance("000004", "登录信息失效");
+        }
+        try
+        {
+            User friend = userService.addFriend(loginInfo.getUser().getAccount(), account);
+            return Resp.getInstance("000000", "添加朋友成功", friend);
+        }
+        catch (NotExistAccountException e)
+        {
+            return Resp.getInstance(e.getCode(), e.getMsg());
+        }
+        catch (AlreadyFriendException e)
+        {
+            return Resp.getInstance(e.getCode(), e.getMsg());
+        }
     }
-*/
+
+    @PostMapping(value = "/removeFriend.do")
+    public Object removeFriend(String token, String account)
+    {
+        LoginInfo loginInfo = cache.asMap().get(token);
+        if (loginInfo == null)
+        {
+            return Resp.getInstance("000004", "登录信息失效");
+        }
+        userService.removeFriend(loginInfo.getUser().getAccount(), account);
+        return Resp.getInstance("000000", "删除朋友[" + account + "]成功");
+    }
+
 }

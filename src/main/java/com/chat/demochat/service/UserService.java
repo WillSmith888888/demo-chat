@@ -1,20 +1,16 @@
 package com.chat.demochat.service;
 
 import com.chat.demochat.entity.User;
+import com.chat.demochat.exception.AlreadyFriendException;
 import com.chat.demochat.exception.LoginException;
-import com.chat.demochat.exception.Resp;
+import com.chat.demochat.exception.NotExistAccountException;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.IOException;
-import java.util.List;
 
 public interface UserService
 {
-    String createSession(List<String> accounts);
-
     void createUser(@RequestBody User user);
-
-    User getByToken(String token) throws LoginException;
 
     User get(String account);
 
@@ -26,8 +22,8 @@ public interface UserService
 
     String getSessionId(String accounts) throws LoginException;
 
-    List<User> getFriends(String token) throws LoginException;
+    User addFriend(String account, String friendAccount) throws NotExistAccountException, AlreadyFriendException;
 
-    void addFriend(String account, String friend);
+    void removeFriend(String account, String friendAccount);
 
 }

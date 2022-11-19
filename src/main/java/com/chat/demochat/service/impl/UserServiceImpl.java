@@ -5,8 +5,11 @@ import com.chat.demochat.component.SessionPool;
 import com.chat.demochat.cons.Constant;
 import com.chat.demochat.dao.UserRepository;
 import com.chat.demochat.entity.LoginInfo;
+import com.chat.demochat.entity.Notify;
 import com.chat.demochat.entity.User;
+import com.chat.demochat.exception.AlreadyFriendException;
 import com.chat.demochat.exception.LoginException;
+import com.chat.demochat.exception.NotExistAccountException;
 import com.chat.demochat.service.UserService;
 import com.chat.demochat.util.Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,7 @@ import javax.annotation.Resource;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Predicate;
 
 @Transactional
 @Slf4j
@@ -56,18 +60,6 @@ public class UserServiceImpl implements UserService
         user.setPassword(DigestUtils.md5Hex(user.getPassword()));
         userRepository.save(user);
     }
-
-    @Override
-    public User getByToken(String token) throws LoginException
-    {
-        LoginInfo loginInfo = cache.asMap().get(token);
-        if (loginInfo == null)
-        {
-            throw new LoginException("000003", "用户登录信息失效");
-        }
-        return get(loginInfo.getUser().getAccount());
-    }
-
 
     @Override
     public User get(String account)
@@ -133,46 +125,53 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public List<User> getFriends(String token) throws LoginException
+    public User addFriend(String account, String friendAccount) throws NotExistAccountException, AlreadyFriendException
     {
-        LoginInfo loginInfo = cache.asMap().get(token);
-        if (loginInfo == null)
+        User friend = userRepository.getReferenceById(friendAccount);
+        if (friend == null)
         {
-            throw new LoginException("000004", "用户登录信息失效");
+            throw new NotExistAccountException(friendAccount);
         }
-        String account = loginInfo.getUser().getAccount();
-        return null;
-    }
-
-
-    @Override
-    public String createSession(List<String> accounts)
-    {
-        // 1.根据用户算出sessionId
-        String sessionId = Utils.getSessionId(accounts);
-
-        // 2.判断sessionId是否存在
-        Map<String, List<PartitionInfo>> topics = consumer.listTopics();
-        boolean bool = topics.containsKey(sessionId);
-
-        // 3.将sessionId存入到kafka
-        if (!bool)
+        User user = userRepository.getReferenceById(account);
+        for (User _friend : user.getFriends())
         {
-            for (String account : accounts)
+            if (friend.getAccount().equals(_friend.getAccount()))
             {
-                kafkaTemplate.send(Constant.USER_TOPIC_PREFIX.concat(account), sessionId);
+                throw new AlreadyFriendException(account);
             }
         }
-
-        return sessionId;
+        saveFriend(user, friend);
+        saveFriend(friend, user);
+        return friend;
     }
-
 
     @Override
-    public void addFriend(String account, String friend)
+    public void removeFriend(String account, String friendAccount)
     {
-
+        User friend = userRepository.getReferenceById(friendAccount);
+        User user = userRepository.getReferenceById(account);
+        List<User> friends = user.getFriends();
+        log.info("用户[]朋友列表:{}", account, JSON.toJSONString(friends));
+        friends.removeIf(_friend -> _friend.getAccount().equals(friend.getAccount()));
+        userRepository.save(user);
+        friends = friend.getFriends();
+        log.info("用户[]朋友列表:{}", friendAccount, JSON.toJSONString(friends));
+        friends.removeIf(_friend -> _friend.getAccount().equals(user.getAccount()));
+        userRepository.save(friend);
     }
+
+    private void saveFriend(User self, User friend)
+    {
+        List<User> friends = self.getFriends();
+        if (friends == null)
+        {
+            friends = new ArrayList<>();
+            self.setFriends(friends);
+        }
+        friends.add(friend);
+        userRepository.save(self);
+    }
+
 
     public static void main(String[] args)
     {
