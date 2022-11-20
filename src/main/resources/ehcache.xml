@@ -6,7 +6,7 @@
     <service>
         <jsr107:defaults enable-statistics="true"/>
     </service>
-    <persistence directory="cache"/>
+    <persistence directory="ehcache"/>
     <cache alias="userCache">
         <key-type>java.lang.String</key-type>
         <value-type>com.chat.demochat.entity.User</value-type>
