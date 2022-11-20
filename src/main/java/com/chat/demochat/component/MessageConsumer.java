@@ -31,7 +31,7 @@ public class MessageConsumer
     @Resource
     private Consumer<String, String> consumer;
 
-    @KafkaListener(topicPattern = Constant.SESSION_ID_PREFIX + "*", containerFactory = "kafkaListenerFactory")
+    @KafkaListener(topicPattern = Constant.SESSION_ID_PREFIX + "*")
     public void onConsume(ConsumerRecord<String, String> record, Acknowledgment ack) throws IOException
     {
         String topic = record.topic();

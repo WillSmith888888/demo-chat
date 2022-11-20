@@ -2,18 +2,29 @@ package com.chat.demochat.controller;
 
 import com.chat.demochat.exception.Resp;
 import com.chat.demochat.util.ZipUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 @Slf4j
 @RestController
+@Api(value = "文件")
 public class FileController
 {
 
@@ -29,6 +40,19 @@ public class FileController
         log.info("源文件：{}, 生成文件全路径：{}", originalFilename, uploadPath + zipName);
         ZipUtil.compressedFileWithPassword(is, file.getOriginalFilename(), uploadPath + zipName, password);
         return Resp.getInstance("000000", null, zipName);
+    }
+
+    @PostMapping(value = "/common/file.do")
+    public Object upload(@RequestParam("file") @RequestPart @ApiParam("file") MultipartFile file) throws IOException
+    {
+        String originalFilename = file.getOriginalFilename();
+        String fileType = originalFilename.substring(originalFilename.lastIndexOf("."));
+        InputStream is = file.getInputStream();
+        String fileName = UUID.randomUUID() + fileType;
+        String filePath = uploadPath + fileName;
+        log.info("文件上传路径:{}", filePath);
+        FileCopyUtils.copy(is, Files.newOutputStream(Paths.get(filePath)));
+        return Resp.getInstance("000000", null, fileName);
     }
 
 }

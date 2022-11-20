@@ -1,12 +1,10 @@
 package com.chat.demochat.controller;
 
+import com.chat.demochat.dao.GroupChatRepository;
 import com.chat.demochat.entity.LoginInfo;
 import com.chat.demochat.entity.Notify;
 import com.chat.demochat.entity.User;
-import com.chat.demochat.exception.AlreadyFriendException;
-import com.chat.demochat.exception.LoginException;
-import com.chat.demochat.exception.NotExistAccountException;
-import com.chat.demochat.exception.Resp;
+import com.chat.demochat.exception.*;
 import com.chat.demochat.service.UserService;
 import io.netty.util.internal.StringUtil;
 import io.swagger.annotations.Api;
@@ -14,6 +12,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,69 +23,21 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@Api(value = "用户管理")
+@Api(value = "用户")
 public class UserController
 {
 
     @Value("${img.path}")
     private String imgPath;
 
+    @Value("${upload.path}")
+    private String uploadPath;
+
     @Resource
     private UserService userService;
 
     @Resource(name = "loginInfoCache")
     private com.github.benmanes.caffeine.cache.Cache<String, LoginInfo> cache;
-
-    @ApiOperation(value = "创建用户接口")
-    @PostMapping(value = "/createUser.do", headers = "content-type=multipart/form-data")
-    public Object createUser(@RequestParam(value = "file") @RequestPart @ApiParam("file") MultipartFile file, @RequestParam("account") String account, @RequestParam("name") String name, @RequestParam("password") String password, String friends) throws IOException
-    {
-        User user = new User();
-        user.setAccount(account);
-        user.setName(name);
-        user.setPassword(password);
-        List<User> list = new ArrayList<>();
-        if (!StringUtil.isNullOrEmpty(friends))
-        {
-            for (String friend : friends.split(","))
-            {
-                User _user = new User();
-                _user.setAccount(friend);
-                list.add(_user);
-            }
-        }
-        user.setFriends(list);
-        userService.createUser(user);
-        int i = file.getOriginalFilename().lastIndexOf(".");
-        String fileType = file.getOriginalFilename().substring(i);
-        InputStream is = file.getInputStream(); //文件输入流
-        log.info("文件路径：{}", imgPath + account + fileType);
-        OutputStream os = new FileOutputStream(new File(imgPath + account + fileType));
-        int len = 0;
-        byte[] buffer = new byte[1024];
-        while ((len = is.read(buffer)) != -1)
-        {
-            os.write(buffer, 0, len);
-            os.flush();
-        }
-        os.close();
-        is.close();
-        return "000000";
-    }
-
-    @GetMapping(value = "/query.do")
-    public Object query(String account)
-    {
-        Object o = userService.get(account);
-        return o != null ? o : "用户不存在";
-    }
-
-    @GetMapping(value = "/delete.do")
-    public Object delete(String account)
-    {
-        userService.delByAccount(account);
-        return "删除成功";
-    }
 
     @PostMapping(value = "/login.do")
     public Object login(String account, String password)
@@ -171,6 +122,63 @@ public class UserController
         }
         userService.removeFriend(loginInfo.getUser().getAccount(), account);
         return Resp.getInstance("000000", "删除朋友[" + account + "]成功");
+    }
+
+    @PostMapping(value = "/createGroupChat.do")
+    public Object createGroupChat(String groupName, String accounts, String logo) throws IOException
+    {
+        try
+        {
+            File uploadFile = new File(uploadPath + logo);
+            if (uploadFile.exists())
+            {
+                FileCopyUtils.copy(uploadFile, new File(imgPath + logo));
+                return Resp.getInstance("000000", userService.createGroupChat(groupName, accounts, logo));
+            }
+            else
+            {
+                return Resp.getInstance("000008", "距离上传logo时间太长，logo已经自动删除");
+            }
+        }
+        catch (LoginException e)
+        {
+            log.error(e.getMsg(), e);
+            return Resp.getInstance(e.getCode(), e.getMsg());
+        }
+        catch (AlreadyGroupException e)
+        {
+            log.error(e.getMsg(), e);
+            return Resp.getInstance(e.getCode(), e.getMsg());
+        }
+    }
+
+    @PostMapping(value = "/getGroupChat.do")
+    public Object getGroupChat(String sessionId)
+    {
+        try
+        {
+            return Resp.getInstance("000000", userService.getGroupChat(sessionId));
+        }
+        catch (LoginException e)
+        {
+            log.error(e.getMsg(), e);
+            return Resp.getInstance(e.getCode(), e.getMsg());
+        }
+    }
+
+    @PostMapping(value = "/delGroupChat.do")
+    public Object delGroupChat(String sessionId)
+    {
+        try
+        {
+            userService.delGroupChat(sessionId);
+            return Resp.getInstance("000000", "会话删除成功");
+        }
+        catch (LoginException e)
+        {
+            log.error(e.getMsg(), e);
+            return Resp.getInstance(e.getCode(), e.getMsg());
+        }
     }
 
 }

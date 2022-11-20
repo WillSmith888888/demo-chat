@@ -27,6 +27,8 @@ public class User implements Serializable
 
     private String password;
 
+    private String logo;
+
     @JsonIgnoreProperties({"friends", "password"})
     @ManyToMany
     @JoinTable(name = "t_friend",

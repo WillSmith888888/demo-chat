@@ -3,26 +3,31 @@ package com.chat.demochat.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.chat.demochat.component.SessionPool;
 import com.chat.demochat.cons.Constant;
+import com.chat.demochat.dao.GroupChatRepository;
 import com.chat.demochat.dao.UserRepository;
-import com.chat.demochat.entity.LoginInfo;
-import com.chat.demochat.entity.Notify;
-import com.chat.demochat.entity.User;
+import com.chat.demochat.entity.*;
 import com.chat.demochat.exception.AlreadyFriendException;
+import com.chat.demochat.exception.AlreadyGroupException;
 import com.chat.demochat.exception.LoginException;
 import com.chat.demochat.exception.NotExistAccountException;
 import com.chat.demochat.service.UserService;
 import com.chat.demochat.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
+import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -32,7 +37,7 @@ import java.util.function.Predicate;
 public class UserServiceImpl implements UserService
 {
 
-    private static final String TOPIC_PREFIX = "websocket.";
+    private static final DateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Resource
     private Consumer<String, String> consumer;
@@ -47,18 +52,24 @@ public class UserServiceImpl implements UserService
     private UserRepository userRepository;
 
     @Resource
+    private GroupChatRepository groupChatRepository;
+
+    @Resource
     private SessionPool sessionPool;
 
     @Resource(name = "loginInfoCache")
     private com.github.benmanes.caffeine.cache.Cache<String, LoginInfo> cache;
 
+    @Resource
+    private AdminClient adminClient;
+
 
     @Override
-    public void createUser(User user)
+    public User createUser(User user)
     {
         // 1.先保存用户
         user.setPassword(DigestUtils.md5Hex(user.getPassword()));
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     @Override
@@ -74,7 +85,8 @@ public class UserServiceImpl implements UserService
     @Override
     public void delByAccount(String account)
     {
-        userRepository.deleteById(account);
+        User user = userRepository.getReferenceById(account);
+        userRepository.delete(user);
     }
 
     @Override
@@ -170,6 +182,56 @@ public class UserServiceImpl implements UserService
         }
         friends.add(friend);
         userRepository.save(self);
+    }
+
+    @Override
+    public GroupChat createGroupChat(String groupName, String accounts, String logo) throws LoginException, AlreadyGroupException
+    {
+        List<String> accountList = Arrays.asList(accounts.split(","));
+        String token = accountList.get(0);
+        LoginInfo loginInfo = cache.asMap().get(token);
+        if (loginInfo == null)
+        {
+            throw new LoginException("000004", "登录信息失效");
+        }
+        accountList.set(0, loginInfo.getUser().getAccount());
+        String sessionId = Utils.getSessionId(accountList);
+        if (groupChatRepository.existsById(sessionId))
+        {
+            throw new AlreadyGroupException(sessionId);
+        }
+        GroupChat groupChat = new GroupChat();
+        groupChat.setGroupName(groupName);
+        groupChat.setLogo(logo);
+        groupChat.setSessionId(sessionId);
+
+        MsgInfo msgInfo = new MsgInfo();
+        msgInfo.setAccount(accountList.get(0));
+        msgInfo.setSessionId(sessionId);
+        msgInfo.setContent("大家好，我创建了群[" + groupName + "]");
+        msgInfo.setTime(dateformat.format(new Date()));
+        kafkaTemplate.send(msgInfo.getSessionId(), JSON.toJSONString(msgInfo));
+        return groupChatRepository.save(groupChat);
+    }
+
+    @Override
+    public GroupChat getGroupChat(String sessionId) throws LoginException
+    {
+        GroupChat groupChat = groupChatRepository.getReferenceById(sessionId);
+        log.info("查询到的群信息：{}", JSON.toJSONString(groupChat));
+        return groupChat;
+    }
+
+    @Override
+    public void delGroupChat(String sessionId) throws LoginException
+    {
+        List<String> topics = new ArrayList<>();
+        topics.add(sessionId);
+        adminClient.deleteTopics(topics);
+        if (groupChatRepository.existsById(sessionId))
+        {
+            groupChatRepository.deleteById(sessionId);
+        }
     }
 
 

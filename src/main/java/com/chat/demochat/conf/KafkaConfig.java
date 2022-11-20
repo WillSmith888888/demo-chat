@@ -1,5 +1,8 @@
 package com.chat.demochat.conf;
 
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -55,18 +58,27 @@ public class KafkaConfig
         return kafkaConsumer;
     }
 
-    @Bean("kafkaListenerFactory")
-    public KafkaListenerContainerFactory getKafkaListenerContainerFactory()
+    @Bean
+    public AdminClient getKafkaAdminClient()
     {
-        Map<String, Object> props = new HashMap<>(5);
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrap_servers);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, 60 * 1000);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, group_id);
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(new DefaultKafkaConsumerFactory(props));
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
-        return factory;
+        Properties prop = new Properties();
+        prop.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrap_servers);
+        AdminClient adminClient = KafkaAdminClient.create(prop);
+        return adminClient;
     }
+
+//    @Bean("c")
+//    public KafkaListenerContainerFactory getKafkaListenerContainerFactory()
+//    {
+//        Map<String, Object> props = new HashMap<>(5);
+//        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrap_servers);
+//        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+//        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+//        props.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, 60 * 1000);
+//        props.put(ConsumerConfig.GROUP_ID_CONFIG, group_id);
+//        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+//        factory.setConsumerFactory(new DefaultKafkaConsumerFactory(props));
+//        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+//        return factory;
+//    }
 }
