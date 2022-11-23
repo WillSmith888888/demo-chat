@@ -1,13 +1,11 @@
 package com.chat.demochat.component;
 
 import com.alibaba.fastjson.JSON;
-import com.chat.demochat.entity.LoginInfo;
-import com.chat.demochat.entity.MsgInfo;
-import com.chat.demochat.entity.MsgWrapper;
-import com.chat.demochat.entity.User;
+import com.chat.demochat.entity.*;
+import com.chat.demochat.exception.LoginException;
+import com.chat.demochat.service.WebsocketHandler;
 import com.chat.demochat.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -15,8 +13,11 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.websocket.*;
+import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 
 @Slf4j
@@ -43,6 +44,9 @@ public class WebSocketEngine
     @Resource
     private CacheManager cacheManager;
 
+    @Resource
+    private WebsocketHandler handler;
+
     @Resource(name = "loginInfoCache")
     private com.github.benmanes.caffeine.cache.Cache<String, LoginInfo> cache;
 
@@ -64,7 +68,8 @@ public class WebSocketEngine
             LoginInfo loginInfo = engine.cache.asMap().get(token);
             if (loginInfo == null)
             {
-                session.getAsyncRemote().sendText(MsgWrapper.wrap(1, "登录信息失效").toString());
+//                session.getAsyncRemote().sendText(MsgWrapper.wrap(1, "登录信息失效").toString());
+                session.getBasicRemote().sendObject(WSResponse.wrap("onOpen", "登录信息失效"));
                 session.close();
                 return;
             }
@@ -117,18 +122,9 @@ public class WebSocketEngine
 
 
     @OnMessage
-    public void onMessage(Session session, String msg)
+    public void onMessage(Session session, WSRequest request) throws LoginException, IOException, InvocationTargetException, IllegalAccessException
     {
-        log.info("【websocket消息】收到客户端消息:" + msg);
-        if ("ping".equals(msg))
-        {
-            session.getAsyncRemote().sendText("pong");
-        }
-        else
-        {
-            MsgInfo msgInfo = JSON.parseObject(msg, MsgInfo.class);
-            engine.kafkaTemplate.send(msgInfo.getSessionId(), msg);
-        }
+        handler.handle(request);
     }
 
     @OnError

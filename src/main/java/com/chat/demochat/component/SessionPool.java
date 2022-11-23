@@ -46,11 +46,14 @@ public class SessionPool
         SessionWrapper wrapper = sessionPool.get(account);
         wrapper.sendText(msg);
 
-        /*Session session = sessionPool.get(account);
-        synchronized (session)
-        {
-            session.getBasicRemote().sendText(msg);
-        }*/
+    }
+
+    public void sendObject(final String account, final Object msg) throws IOException
+    {
+
+        SessionWrapper wrapper = sessionPool.get(account);
+        wrapper.sendObject(msg);
+
     }
 
     public void info()

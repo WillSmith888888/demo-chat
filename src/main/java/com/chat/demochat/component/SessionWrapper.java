@@ -2,6 +2,7 @@ package com.chat.demochat.component;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.websocket.EncodeException;
 import javax.websocket.Session;
 import java.io.IOException;
 
@@ -72,6 +73,23 @@ public class SessionWrapper
                 session.getBasicRemote().sendText(msg);
             }
             catch (IOException e)
+            {
+                e.printStackTrace();
+                log.error("发送信息[{}]出现异常", msg, e);
+            }
+        });
+    }
+
+    public void sendObject(Object msg)
+    {
+        singleThreadPoolExecutor.execute(() ->
+        {
+            try
+            {
+                log.info("用户[{}]发送信息:[{}]", this.account, msg);
+                session.getBasicRemote().sendObject(msg);
+            }
+            catch (IOException | EncodeException e)
             {
                 e.printStackTrace();
                 log.error("发送信息[{}]出现异常", msg, e);

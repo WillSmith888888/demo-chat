@@ -4,9 +4,12 @@ window.messageTempSelf;
 window.contactItem;
 window.contactGroup;
 window.user;
+window.friend;
 window.friendPage;
 window.profile;
 window.chatHeader;
+window.createGroup;
+window.groupFriend;
 var websocket;
 
 var heartCheck = {
@@ -31,13 +34,18 @@ function initEvent() {
     });
     $('.contacts-list').on('click', '.contacts-link', function() {
         $(".main").addClass("main-visible");
+        // $('.contacts-list .contacts-link').each(function(index, ele) {
+        //     $(this).closest('li').css('background', 'none');
+        // });
+        // $(this).closest('li').css('background', '#665dfe');
         var account = $(this).attr('data-account');
         if (account) {
             showFriendPage(account);
         }
         var sessionid = $(this).attr('data-sessionid');
+        var sessionInfo = $(this).attr('session-info');
         if (sessionid) {
-            showSession(sessionid);
+            showSession(sessionid, sessionInfo);
         }
     });
     $('.friends .container-xl').on('click', '.start-chat', function() {
@@ -111,11 +119,13 @@ function send() {
         websocket.send(JSON.stringify({
             sessionId: sessionId,
             account: account,
-            content: cryptTool.encrypt(sessionId, content),
+            content: cryptTool.encrypt(sessionId, content, time),
             time: time
         }));
-        $('#msg').val('');
-
+        // $('#msg').val(undefined);
+        setTimeout(function() {
+            $('#msg').val(undefined)
+        }, 100);
     }
 }
 
@@ -157,6 +167,7 @@ function initWebsocket() {
                 alert(msg.data);
             } else if (msg.type == 2) {
                 renderFriends(msg);
+                renderGroupFriends(msg);
                 renderProfile(msg);
             } else {
                 renderSession(msg);
@@ -191,8 +202,14 @@ function loadTemp() {
                             window.profile = temp;
                             $.get('temp/chat-header.html', function(temp) {
                                 window.chatHeader = temp;
-                                initWebsocket();
-                                initEvent();
+                                $.get('temp/friend.html', function(temp) {
+                                    window.friend = temp;
+                                    $.get('temp/group-friend.html', function(temp) {
+                                        window.groupFriend = temp;
+                                        initWebsocket();
+                                        initEvent();
+                                    });
+                                });
                             });
                         });
                     });
@@ -205,18 +222,16 @@ function loadTemp() {
 // 渲染朋友列表
 function renderFriends(msg) {
     if (msg.data.friends) {
-        $.get('temp/friend.html', function(temp) {
-            var content = [];
-            for (var i = 0; i < msg.data.friends.length; i++) {
-                var _temp = temp;
-                var friend = msg.data.friends[i];
-                for (var key in friend) {
-                    _temp = _temp.replaceAll('${' + key + '}', friend[key]);
-                }
-                content.push(_temp);
+        var content = [];
+        for (var i = 0; i < msg.data.friends.length; i++) {
+            var _temp = window.friend;
+            var friend = msg.data.friends[i];
+            for (var key in friend) {
+                _temp = _temp.replaceAll('${' + key + '}', friend[key]);
             }
-            $('#friendsTab').html(content.join(''));
-        });
+            content.push(_temp);
+        }
+        $('#friendsTab').html(content.join(''));
     }
 }
 
@@ -240,13 +255,19 @@ function renderSession(msg) {
     var message;
     if (window.user.account == msg.account) {
         message = window.messageTempSelf;
+        msg.logo = window.user.logo;
     } else {
         message = window.messageTemp;
+        var friend = getFriend(msg.account);
+        msg.logo = friend.logo;
     }
 
     for (var key in msg) {
         if (key == 'content') {
-            msg[key] = cryptTool.decrypt(sessionId, msg[key]);
+            var txt = cryptTool.decrypt(sessionId, msg[key], msg.time);
+            if (txt) {
+                msg[key] = txt;
+            }
         }
         message = message.replaceAll('${' + key + '}', msg[key]);
     }
@@ -273,29 +294,20 @@ function showFriendPage(account) {
 }
 
 
-function showSession(sessionId) {
+function showSession(sessionId, sessionInfo) {
     $('#messageBody .message-day').each(function(index, ele) {
         if ($(ele).hasClass(sessionId)) {
             $(ele).show();
         } else {
             $(ele).hide();
         }
-        var accounts = sessionId.replaceAll('SESSION.', '').split('-');
-        if (accounts.length == 2) {
-            var chatHeader = window.chatHeader;
-            for (var i = 0; i < accounts.length; i++) {
-                if (accounts[i] != window.user.account) {
-                    for (var j = 0; j < window.user.friends.length; j++) {
-                        if (accounts[i] == window.user.friends[j].account) {
-                            for (var key in window.user.friends[j]) {
-                                chatHeader = chatHeader.replaceAll('${' + key + '}', window.user.friends[j][key]);
-                            }
-                        }
-                    }
-                }
-            }
-            $('.chat-header').html(chatHeader);
+        var chatHeader = window.chatHeader;
+        var arr = sessionInfo.split('|');
+        var data = { name: arr[0], logo: arr[1], sessionId: sessionId };
+        for (var key in data) {
+            chatHeader = chatHeader.replaceAll('${' + key + '}', data[key]);
         }
+        $('.chat-header').html(chatHeader);
         $('#sendMsg').closest('form').attr('data-sessionid', sessionId);
 
     });
@@ -309,6 +321,21 @@ function createSession(sessionId) {
     if (accounts.length > 2) {
         contact = window.contactGroup;
         // TODO 待定
+        $.ajax({
+            type: 'POST',
+            url: '/chat/getGroupChat.do',
+            data: { sessionId: sessionId },
+            async: false,
+            success: function(resp) {
+                if (resp.code == '000000') {
+                    data.groupName = resp.data.groupName;
+                    data.logo = resp.data.logo;
+                    data.sessionInfo = data.groupName + '|' + data.logo;
+                } else {
+                    console.info(rep.msg);
+                }
+            }
+        });
     } else {
         contact = window.contactItem;
         if (accounts[0] != window.user.account) {
@@ -316,11 +343,10 @@ function createSession(sessionId) {
         } else {
             data.friendAccount = accounts[1];
         }
-        for (var i = 0; i < window.user.friends.length; i++) {
-            if (window.user.friends[i].account == data.friendAccount) {
-                data.friendName = window.user.friends[i].name;
-            }
-        }
+        var friend = getFriend(data.friendAccount);
+        data.friendName = friend.name;
+        data.friendLogo = friend.logo;
+        data.sessionInfo = data.friendName + '|' + data.friendLogo;
     }
 
     var time = new Date();
@@ -338,6 +364,15 @@ function createSession(sessionId) {
             $(ele).hide();
         }
     });
+}
+
+
+function getFriend(account) {
+    for (var i = 0; i < window.user.friends.length; i++) {
+        if (window.user.friends[i].account == account) {
+            return window.user.friends[i];
+        }
+    }
 }
 
 loadTemp();
