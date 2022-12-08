@@ -1,9 +1,11 @@
 package com.chat.demochat.controller;
 
 import com.chat.demochat.entity.Notify;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@CrossOrigin
 @RestController
 public class NotifyController
 {

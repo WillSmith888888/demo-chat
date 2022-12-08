@@ -10,10 +10,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -22,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
+@CrossOrigin
 @RestController
 @Api(value = "管理员")
 public class AdminController

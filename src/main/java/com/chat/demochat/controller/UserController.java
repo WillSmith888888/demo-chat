@@ -1,28 +1,24 @@
 package com.chat.demochat.controller;
 
-import com.chat.demochat.dao.GroupChatRepository;
 import com.chat.demochat.entity.LoginInfo;
-import com.chat.demochat.entity.Notify;
 import com.chat.demochat.entity.User;
 import com.chat.demochat.exception.*;
 import com.chat.demochat.service.UserService;
-import io.netty.util.internal.StringUtil;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
 
 @Slf4j
 @RestController
+@CrossOrigin
 @Api(value = "用户")
 public class UserController
 {

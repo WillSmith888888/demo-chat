@@ -122,9 +122,18 @@ public class WebSocketEngine
 
 
     @OnMessage
-    public void onMessage(Session session, WSRequest request) throws LoginException, IOException, InvocationTargetException, IllegalAccessException
+    public void onMessage(Session session, String msg)
     {
-        handler.handle(request);
+        log.info("【websocket消息】收到客户端消息:" + msg);
+        if ("ping".equals(msg))
+        {
+            session.getAsyncRemote().sendText("pong");
+        }
+        else
+        {
+            MsgInfo msgInfo = JSON.parseObject(msg, MsgInfo.class);
+            engine.kafkaTemplate.send(msgInfo.getSessionId(), msg);
+        }
     }
 
     @OnError
