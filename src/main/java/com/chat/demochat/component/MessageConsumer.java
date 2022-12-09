@@ -60,21 +60,25 @@ public class MessageConsumer
             {
                 log.info("查询聊天会话[{}]过往聊天信息", sessionId);
                 Map<TopicPartition, Long> timestampsToSearch = new HashMap<>();
-                long fetchDataTime = System.currentTimeMillis() / 1000 - kafkaSeekTime;
+                long fetchDataTime = System.currentTimeMillis() - kafkaSeekTime * 1000;
                 Set<TopicPartition> assignment = new HashSet<>();
                 TopicPartition topicPartition = new TopicPartition(sessionId, 0);
                 timestampsToSearch.put(topicPartition, fetchDataTime);
                 assignment.add(topicPartition);
                 consumer.assign(assignment);
                 Map<TopicPartition, OffsetAndTimestamp> map = consumer.offsetsForTimes(timestampsToSearch);
-                log.info("消费[{}]历史数据，消费位置[{}]", sessionId, map.get(topicPartition).offset());
-                consumer.seek(topicPartition, map.get(topicPartition).offset());
-                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
-                Iterator<ConsumerRecord<String, String>> iterator = records.iterator();
-                while (iterator.hasNext())
+                OffsetAndTimestamp offsetAndTimestamp = map.get(topicPartition);
+                if (offsetAndTimestamp != null)
                 {
-                    ConsumerRecord<String, String> record = iterator.next();
-                    sessionPool.sendText(account, record.value());
+                    log.info("消费[{}]历史数据，消费位置[{}]", sessionId, offsetAndTimestamp.offset());
+                    consumer.seek(topicPartition, offsetAndTimestamp.offset());
+                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+                    Iterator<ConsumerRecord<String, String>> iterator = records.iterator();
+                    while (iterator.hasNext())
+                    {
+                        ConsumerRecord<String, String> record = iterator.next();
+                        sessionPool.sendText(account, record.value());
+                    }
                 }
             }
 
