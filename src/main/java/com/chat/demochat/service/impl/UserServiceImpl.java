@@ -15,6 +15,7 @@ import com.chat.demochat.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.springframework.cache.CacheManager;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 
 @Transactional
@@ -133,7 +135,35 @@ public class UserServiceImpl implements UserService
             throw new LoginException("000004", "登录信息失效");
         }
         accountList.set(0, loginInfo.getUser().getAccount());
-        return Utils.getSessionId(accountList);
+        String sessionId = Utils.getSessionId(accountList);
+        initSession(loginInfo.getUser().getAccount(), sessionId);
+        return sessionId;
+    }
+
+    public void initSession(String account, String sessionId)
+    {
+        ListTopicsResult listTopicsResult = adminClient.listTopics();
+        try
+        {
+            boolean exist = listTopicsResult.names().get().contains(sessionId);
+            if (!exist)
+            {
+                MsgInfo msgInfo = new MsgInfo();
+                msgInfo.setSessionId(sessionId);
+                msgInfo.setAccount(account);
+                msgInfo.setTime(ExtDate.getCurrentTimeStr());
+                msgInfo.setContent("我开启了会话");
+                kafkaTemplate.send(sessionId, JSON.toJSONString(msgInfo));
+            }
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        catch (ExecutionException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @Override
