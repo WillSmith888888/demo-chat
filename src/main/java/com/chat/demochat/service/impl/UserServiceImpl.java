@@ -14,10 +14,10 @@ import com.chat.demochat.service.UserService;
 import com.chat.demochat.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.ListTopicsResult;
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.PartitionInfo;
+import org.apache.kafka.common.TopicPartition;
 import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -136,11 +136,11 @@ public class UserServiceImpl implements UserService
         }
         accountList.set(0, loginInfo.getUser().getAccount());
         String sessionId = Utils.getSessionId(accountList);
-        initSession(loginInfo.getUser().getAccount(), sessionId);
+        initSession(sessionId);
         return sessionId;
     }
 
-    public void initSession(String account, String sessionId)
+    public void initSession(String sessionId)
     {
         ListTopicsResult listTopicsResult = adminClient.listTopics();
         try
@@ -148,12 +148,13 @@ public class UserServiceImpl implements UserService
             boolean exist = listTopicsResult.names().get().contains(sessionId);
             if (!exist)
             {
-                MsgInfo msgInfo = new MsgInfo();
-                msgInfo.setSessionId(sessionId);
-                msgInfo.setAccount(account);
-                msgInfo.setTime(ExtDate.getCurrentTimeStr());
-                msgInfo.setContent("我开启了会话");
-                kafkaTemplate.send(sessionId, JSON.toJSONString(msgInfo));
+//                MsgInfo msgInfo = new MsgInfo();
+//                msgInfo.setSessionId(sessionId);
+//                msgInfo.setAccount(account);
+//                msgInfo.setTime(ExtDate.getCurrentTimeStr());
+//                msgInfo.setContent("我开启了会话");
+//                kafkaTemplate.send(sessionId, JSON.toJSONString(msgInfo));
+                createTopic(sessionId);
             }
         }
         catch (InterruptedException e)
@@ -255,24 +256,41 @@ public class UserServiceImpl implements UserService
     @Override
     public void delGroupChat(String sessionId) throws LoginException
     {
-        List<String> topics = new ArrayList<>();
-        topics.add(sessionId);
-        adminClient.deleteTopics(topics);
         if (groupChatRepository.existsById(sessionId))
         {
             groupChatRepository.deleteById(sessionId);
         }
+        deleteTopic(sessionId);
     }
 
-
-    public static void main(String[] args)
+    public void deleteTopic(String sessionId)
     {
-        TreeSet<String> treeSet = new TreeSet();
-        treeSet.add("134");
-        treeSet.add("347781");
-        treeSet.add("189");
-        treeSet.add("144");
-        treeSet.add("5671");
-        log.info(treeSet.toString());
+        List<TopicPartition> tps = new ArrayList<>();
+        TopicPartition tp = new TopicPartition(sessionId, 0);
+        tps.add(tp);
+        consumer.assign(tps);
+        consumer.seekToEnd(tps);
+        long position = consumer.position(tp);
+        RecordsToDelete recordsToDelete = RecordsToDelete.beforeOffset(position);
+        Map<TopicPartition, RecordsToDelete> map = new HashMap<>();
+        map.put(tp, recordsToDelete);
+        adminClient.deleteRecords(map);
+    }
+
+    public void createTopic(String sessionId)
+    {
+        List<NewTopic> topics = new ArrayList<>();
+        NewTopic topic = new NewTopic(sessionId, 1, (short) 1);
+        topics.add(topic);
+        CreateTopicsResult result = adminClient.createTopics(topics);
+        try
+        {
+            log.info("创建topic结果：{}", result.topicId(sessionId).get().toString());
+        }
+        catch (Exception e)
+        {
+            log.error("创建topic出现异常{}", e);
+            e.printStackTrace();
+        }
     }
 }

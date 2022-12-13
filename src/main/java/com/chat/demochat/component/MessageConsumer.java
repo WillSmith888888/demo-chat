@@ -32,7 +32,7 @@ public class MessageConsumer
     private Consumer<String, String> consumer;
 
     @KafkaListener(topicPattern = Constant.SESSION_ID_PREFIX + "*")
-    public void onConsume(ConsumerRecord<String, String> record, Acknowledgment ack) throws IOException
+    public void onConsume(ConsumerRecord<String, String> record) throws IOException
     {
         String topic = record.topic();
         String[] accounts = topic.replace(Constant.SESSION_ID_PREFIX, "").split("-");
@@ -42,7 +42,6 @@ public class MessageConsumer
             if (sessionPool.containsKey(account))
             {
                 sessionPool.sendText(account, msg);
-                ack.acknowledge();
             }
         }
     }

@@ -68,8 +68,8 @@ public class WebSocketEngine
             LoginInfo loginInfo = engine.cache.asMap().get(token);
             if (loginInfo == null)
             {
-//                session.getAsyncRemote().sendText(MsgWrapper.wrap(1, "登录信息失效").toString());
-                session.getBasicRemote().sendObject(WSResponse.wrap("onOpen", "登录信息失效"));
+                session.getAsyncRemote().sendText(MsgWrapper.wrap(1, "登录信息失效").toString());
+//                session.getBasicRemote().sendObject(WSResponse.wrap("onOpen", "登录信息失效"));
                 session.close();
                 return;
             }
